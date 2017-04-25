@@ -1,0 +1,17 @@
+{
+  "name": "duplicate-swagger-tree",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.24.1",
+    "isomorphic-fetch": "^2.2.1",
+    "js-yaml": "^3.8.3",
+    "traverse": "^0.6.6"
+  }
+}
