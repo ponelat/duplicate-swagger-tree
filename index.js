@@ -14,7 +14,6 @@ console.log('url', startUrl)
 console.log('token', token ? '***' : '?')
 console.log('newToken', newToken ? '***' : '?')
 console.log('newOwner', newOwner)
-console.log('newToken', newToken)
 console.log('baseUrl', baseUrl)
 console.log('')
 
@@ -24,9 +23,9 @@ getTree(startUrl, new Map(), new Set()).then( (db) => {
   Promise.all(urls.map( url => {
     const body = db.get(url)
     console.log('Starting: ' + url)
-    return postApi({ 
+    return postApi({
       token: newToken,
-      url: newUrl(url),
+      url: makeUrls(url).postUrl,
       body,
     }).then((res) => console.log(`Completed: ${res.status} : ${res.url} `))
   })).then(() => console.log('done!'))
@@ -63,7 +62,7 @@ function getTree(body, db, downloading) {
       if(this.key === '$ref') {
         const url = getUrl($ref)
         if(url) {
-          this.update($ref.replace(url, newUrl(url)))
+          this.update($ref.replace(url, makeUrls(url).url))
           nextStep(url)
         }
       }
@@ -84,9 +83,13 @@ function getTree(body, db, downloading) {
   return Promise.all(proms).then(() => db)
 }
 
-function newUrl(url) {
-  const [, type, owner, name, version] = /swaggerhub.com\/(.*)\/(.*)\/(.*)\/(.*)/.exec(url)
-  return `${baseUrl}/${type}/${newOwner}/${name}/${version}`
+function makeUrls(url) {
+  const [, type, owner, name, version] = /\/(apis|domains)\/([^/]+)\/([^/]+)\/([^/]+)/.exec(url)
+  return {
+    type, owner, name, version,
+    url: [baseUrl, type, newOwner, name, version].join('/'),
+    postUrl: [baseUrl, type, newOwner, name].join('/') + `?version=${version}`,
+  }
 }
 
 function postApi({ url, token, body }) {
@@ -96,19 +99,17 @@ function postApi({ url, token, body }) {
     throw Error('Tried to publish to prod')
   }
 
-    const parts = url.split('/')
-    const version = parts.slice(-1)
-    const baseWithoutVersion = parts.slice(0, -1)
-    const postUrl = baseWithoutVersion.join('/') + '?version=' + version
-
   const req = {
     method: "POST",
     headers: {
-      authorization: `Bearer ${token}`,
       'content-type': 'application/yaml',
     },
     body: jsYaml.safeDump(body)
   }
 
-  return fetch(postUrl, req)
+  if(token) {
+    req.headers.authorization = `Bearer ${token}`
+  }
+
+  return fetch(url, req)
 }
