@@ -35,11 +35,11 @@ getTree(startUrl, new Map(), new Set()).then( (db) => {
 
 function getSpec(url) {
   const req = {}
-
   req.headers = Object.assign({
-    authorization: `Bearer ${token}`,
     accept: 'application/json',
-  }, req.headers)
+  }, token ?  {
+    authorization: `Bearer ${token}`,
+  } : {}, req.headers)
   return fetch(url, req).then( r => r.json())
 }
 
